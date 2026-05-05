@@ -1,6 +1,5 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_pinecone import Pinecone as LC_Pinecone
 
 from pinecone import Pinecone, ServerlessSpec
 import os
@@ -82,11 +81,34 @@ def ingest_sections(section_files, doc_name):
 
     print("📡 Uploading to Pinecone...")
 
-    LC_Pinecone.from_documents(
-        documents=all_docs,
-        embedding=embeddings,
-        index_name=index_name,
-        namespace=doc_name
-    )
+    index = pc.Index(index_name)
 
-    print("✅ Ingestion SUCCESSFUL")
+    texts = [chunk.page_content for chunk in all_docs]
+    print(f"⚡ Generating embeddings for {len(texts)} chunks (batched)...")
+    batch_embeddings = embeddings.embed_documents(texts)
+
+    vectors = []
+    for i, embedding in enumerate(batch_embeddings):
+        chunk = all_docs[i]
+        vectors.append({
+            "id": f"{doc_name}-{i}",
+            "values": embedding,
+            "metadata": {
+                "text": chunk.page_content,
+                "section": chunk.metadata["section"],
+                "doc_name": chunk.metadata["doc_name"],
+                "page": str(chunk.metadata["page"]),
+                "source": chunk.metadata.get("source", ""),
+            }
+        })
+
+    BATCH_SIZE = 100
+    for i in range(0, len(vectors), BATCH_SIZE):
+        batch = vectors[i:i + BATCH_SIZE]
+        index.upsert(vectors=batch, namespace=doc_name)
+        print(f"  Upserted batch {i // BATCH_SIZE + 1}/{(len(vectors) + BATCH_SIZE - 1) // BATCH_SIZE}")
+
+    stats = index.describe_index_stats()
+    ns_stats = stats.namespaces.get(doc_name)
+    count = ns_stats.vector_count if ns_stats else 0
+    print(f"✅ Ingestion SUCCESSFUL — {count} vectors in namespace '{doc_name}'")

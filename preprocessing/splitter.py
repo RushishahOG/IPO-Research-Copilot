@@ -29,8 +29,12 @@ def find_toc_page(doc, max_pages=15):
     return toc_page[1]
 
 def extract_sections_from_toc_text(text):
-    pattern = r"(SECTION\s+[IVXLC]+\s*[-–]\s*[A-Z\s]+?)\s+\.{2,}\s+(\d+)"
-    matches = re.findall(pattern, text)
+    pattern = r"(SECTION\s+(?:[IVXLC0-9]+\.?\s*)?[-–:]?\s*[A-Za-z\s&()\/,\-–\.]+?)\s+[\. \t]+\s*(\d{2,4})\s*$"
+    matches = re.findall(pattern, text, re.MULTILINE)
+
+    if len(matches) == 0:
+        pattern = r"(SECTION\s+\S+.*?)(?:\s+[\. \t]+\s*)(\d{2,4})\s*$"
+        matches = re.findall(pattern, text, re.MULTILINE)
 
     sections = []
     for title, page in matches:
@@ -42,6 +46,9 @@ def extract_sections_from_toc_text(text):
         })
 
     if len(sections) == 0:
+        print("=== TOC TEXT (first 1500 chars) ===")
+        print(text[:1500])
+        print("===================================")
         raise Exception("No sections found in TOC parsing")
 
     # print(f"Extracted {len(sections)} sections from TOC")
