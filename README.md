@@ -344,7 +344,7 @@ The `scoring_agent` evaluates each retrieved chunk for relevance before synthesi
 
 ## 📌 Author / Credits
 
-Built by **[Your Name](https://github.com/your-username)**
+Built by **[Rushi Shah](https://github.com/your-username)**
 
 > This project was developed as part of a portfolio showcase for AI/ML engineering roles. Contributions and feedback are welcome!
 
