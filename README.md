@@ -352,6 +352,6 @@ Built by **[Rushi Shah](https://github.com/RushishahOG)**
 
 <div align="center">
 
-**⭐ If you found this project useful, consider giving it a star!**
+**⭐ If you find this project useful, consider giving it a star!**
 
 </div>
