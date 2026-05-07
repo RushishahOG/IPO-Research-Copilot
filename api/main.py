@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
+import uvicorn
 
 load_dotenv()
 
@@ -40,10 +41,10 @@ async def health_check():
 
 
 if __name__ == "__main__":
-    import uvicorn
+    
     uvicorn.run(
         "api.main:app",
-        host=os.getenv("HOST", "0.0.0.0"),
-        port=int(os.getenv("PORT", "8000")),
+        host="0.0.0.0",
+        port="2706",
         reload=True,
     )
