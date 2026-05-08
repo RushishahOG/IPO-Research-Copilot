@@ -1,13 +1,14 @@
 from fastapi import APIRouter, HTTPException
 
 from api.models.document import DocumentInfo, DocumentListResponse, DocumentDeleteResponse
-from api.services.ingestion_service import list_all_metadata, delete_document
+# Deferred imports for speed
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
 
 @router.get("", response_model=DocumentListResponse)
 async def list_documents():
+    from api.services.ingestion_service import list_all_metadata
     documents = list_all_metadata()
 
     return DocumentListResponse(
@@ -29,6 +30,7 @@ async def delete_document_route(doc_name: str):
     doc_name = doc_name.lower().strip()
 
     try:
+        from api.services.ingestion_service import delete_document
         result = delete_document(doc_name)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Delete failed: {e}")

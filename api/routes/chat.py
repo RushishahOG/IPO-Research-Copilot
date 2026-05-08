@@ -1,7 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
 from api.models.chat import ChatRequest, ChatResponse, Source
-from api.services.chat_service import chat_with_document
 from api.services.pinecone_service import namespace_exists
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -16,6 +15,7 @@ async def chat(request: ChatRequest):
         raise HTTPException(status_code=404, detail=f"Document not found: {request.doc_name}")
 
     try:
+        from api.services.chat_service import chat_with_document
         result = chat_with_document(
             query=request.query,
             doc_name=request.doc_name,

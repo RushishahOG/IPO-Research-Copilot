@@ -4,7 +4,6 @@ from fastapi import APIRouter, HTTPException, UploadFile, File
 
 from api.models.ingest import UploadResponse, ReingestResponse
 from api.config import RAW_DIR, ALLOWED_EXTENSIONS, MAX_UPLOAD_SIZE_MB
-from api.services.ingestion_service import ingest_document, reingest_document, get_doc_name
 
 router = APIRouter(tags=["ingest"])
 
@@ -20,6 +19,7 @@ async def upload_document(file: UploadFile = File(...)):
             detail=f"Only PDF files are allowed. Got: {ext}",
         )
 
+    from api.services.ingestion_service import get_doc_name
     doc_name = get_doc_name(filename)
 
     file_path = RAW_DIR / f"{doc_name}.pdf"
@@ -31,6 +31,7 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"File save failed: {e}")
 
     try:
+        from api.services.ingestion_service import ingest_document
         result = ingest_document(str(file_path), doc_name)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -52,6 +53,7 @@ async def reingest_document_route(doc_name: str):
     doc_name = doc_name.lower().strip()
 
     try:
+        from api.services.ingestion_service import reingest_document
         result = reingest_document(doc_name)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
