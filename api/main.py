@@ -1,9 +1,7 @@
 import os
-from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
-import uvicorn
 
 load_dotenv()
 
@@ -28,9 +26,11 @@ app.include_router(documents.router)
 app.include_router(ingest.router)
 
 @app.get("/")
-def root():
-    return {"message": "DRHP RAG System Backend Running", "docs": "/docs"}
-
+async def root():
+    return {
+        "message": "DRHP RAG System Backend Running",
+        "docs": "/docs",
+    }
 
 @app.get("/health")
 async def health_check():
@@ -39,12 +39,11 @@ async def health_check():
         "service": "drhp-rag-api",
     }
 
-
 if __name__ == "__main__":
-    
+    import uvicorn
+
     uvicorn.run(
         "api.main:app",
         host="0.0.0.0",
-        port=int(os.getenv("PORT", "2706")),
-        reload=True,
+        port=int(os.environ.get("PORT", 8000)),
     )
