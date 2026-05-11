@@ -5,7 +5,7 @@ API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:2706")
 
 APP_TITLE = "DRHP Analyst AI"
 APP_SUBTITLE = "Multi-Agent RAG System for Draft Red Herring Prospectus Analysis"
-APP_ICON = "📊"
+APP_ICON = "frontend/utils/coin.png"
 
 PAGE_CONFIG = {
     "page_title": APP_TITLE,
