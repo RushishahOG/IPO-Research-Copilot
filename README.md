@@ -1,86 +1,71 @@
 # DRHP Analyst AI 📄🤖
 
-> Multi-Agent RAG System API for intelligent Draft Red Herring Prospectus (DRHP) analysis
+> Multi-Agent RAG System + Streamlit Frontend for intelligent Draft Red Herring Prospectus (DRHP) analysis
 
 [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.136+-009688.svg)](https://fastapi.tiangolo.com/)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-orange.svg)](https://langchain-ai.github.io/langgraph/)
 [![Pinecone](https://img.shields.io/badge/Pinecone-VectorDB-purple.svg)](https://www.pinecone.io/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-red.svg)](https://streamlit.io/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
 ## 🚀 Project Overview
 
-**DRHP Analyst AI** is an intelligent document analysis system designed to parse, understand, and answer questions about Draft Red Herring Prospectus (DRHP) filings. DRHPs are lengthy, legally dense documents filed by companies going public with an IPO. Extracting actionable insights from them requires understanding financial metrics, risk factors, industry positioning, and legal disclosures buried across hundreds of pages.
+**DRHP Analyst AI** is an intelligent document analysis platform that parses, understands, and answers questions about Draft Red Herring Prospectus (DRHP) filings — the lengthy, legally dense documents companies file when going public via IPO.
 
-### Why This Matters
-Traditional keyword search fails on DRHPs because:
-- Critical information is scattered across non-contiguous sections
-- Legal boilerplate creates massive noise
-- Financial tables require structured reasoning
-- Context from multiple sections must be synthesized
-
-### Key Innovation
-This system combines **multi-agent RAG (Retrieval-Augmented Generation)** with **section-aware retrieval** and **strict grounding** to deliver analyst-grade answers with page-level citations — without hallucination.
-
----
-
-## 🧠 Architecture
+### System Architecture
 
 ```
-User Query
-    ↓
-┌─────────────┐
-│   Router    │ ← Classifies query intent (risk, financial, company, etc.)
-└──────┬──────┘
-       ↓
-┌─────────────────────────────┐
-│      Specialist Agents      │
-│  ┌───────┐ ┌──────────┐    │
-│  │ Risk  │ │ Financial│    │
-│  └───────┘ └──────────┘    │
-│  ┌───────┐ ┌──────────┐    │
-│  │Company│ │  Object  │    │
-│  └───────┘ └──────────┘    │
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│  Section-Aware Retrieval    │
-│  (Pinecone + Subsection     │
-│   Filtering to remove noise)│
-└──────────────┬──────────────┘
-               ↓
-┌─────────────────────────────┐
-│     Scoring & Synthesis     │
-│  (Relevance scoring →       │
-│   Evidence-backed answer)   │
-└──────────────┬──────────────┘
-               ↓
-         Final Answer
+                            ┌─────────────┐
+                            │  Streamlit   │  ← http://localhost:8501
+                            │   Frontend   │
+                            └──────┬──────┘
+                                   │ REST API
+                            ┌──────▼──────┐
+                            │   FastAPI    │  ← http://localhost:2706
+                            │   Backend    │
+                            └──────┬──────┘
+                                   │
+        ┌──────────────────────────┼──────────────────────────┐
+        │                          │                          │
+   ┌────▼────┐             ┌───────▼───────┐          ┌──────▼──────┐
+   │  Router  │             │   Pinecone    │          │   Agents    │
+   │(LangGraph)│             │  Vector DB    │          │(8 Specialists)│
+   └────┬────┘             └───────┬───────┘          └──────┬──────┘
+        │                          │                          │
+        └──────────────────────────┼──────────────────────────┘
+                                   │
+                            ┌──────▼──────┐
+                            │  Synthesis   │
+                            │    Agent     │
+                            └──────┬──────┘
+                                   │
+                            ┌──────▼──────┐
+                            │   Answer +   │
+                            │   Sources    │
+                            └─────────────┘
 ```
-
-### Core Components
-
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Orchestration** | LangGraph | Multi-agent state machine with conditional routing |
-| **Vector Store** | Pinecone | Embeddings with namespace isolation per document |
-| **LLMs** | Gemini / Groq | Reasoning, classification, and answer generation |
-| **Retrieval** | LangChain + Hybrid Search | Section + subsection-aware semantic search |
-| **API** | FastAPI | REST endpoints for upload, query, and document management |
 
 ---
 
 ## 🔥 Features
 
-- **🤖 Multi-Agent System** — Specialized agents for risk analysis, financial metrics, company overview, and object clause evaluation
-- **🔒 Namespace Isolation** — Each document gets its own Pinecone namespace for safe multi-document querying
+### Backend
+- **🤖 Multi-Agent System** — 8 specialist agents (Risk, Financial, Company, IPO, Legal, Regulatory, Red Flag, Scoring) coordinated via LangGraph
+- **🔒 Namespace Isolation** — Each document gets its own Pinecone namespace for safe multi-document queries
 - **📖 Evidence-Backed Answers** — Every response includes page numbers, section names, and source snippets
-- **📤 Upload & Delete** — Full lifecycle management for DRHP PDFs via REST API
-- **🚫 No Hallucination** — Strict grounding with relevance scoring; refuses to answer if evidence is insufficient
-- **🔍 Subsection Filtering** — Removes legal noise like standard "objects clause" boilerplate before retrieval
-- **🔄 Dynamic Query Routing** — Automatically selects the right specialist agent based on query intent
+- **🚫 No Hallucination** — Strict grounding with relevance scoring; refuses to answer without sufficient evidence
+- **🔍 Subsection Filtering** — Removes legal noise before retrieval
+- **🔄 Dynamic Query Routing** — Automatically routes queries to the right specialist agent
+
+### Frontend
+- **🏠 Landing Page** — Premium fintech hero section with animated metrics and feature showcase
+- **📂 Document Dashboard** — List, search, reingest, and delete documents
+- **📤 Upload Page** — Drag-and-drop PDF upload with real-time ingestion progress
+- **💬 AI Chat** — ChatGPT-style interface with document selector, suggested prompts, and source citations
+- **📈 Analytics** — System metrics, document stats, and query performance charts (Plotly)
 
 ---
 
@@ -88,12 +73,12 @@ User Query
 
 | Layer | Technology |
 |-------|------------|
-| **Language** | Python 3.10+ |
-| **API Framework** | FastAPI + Uvicorn |
-| **LLM Orchestration** | LangChain + LangGraph |
+| **Frontend** | Streamlit, Pandas, Plotly, CSS3 (Glassmorphism) |
+| **Backend** | FastAPI, Uvicorn |
+| **LLM Orchestration** | LangChain, LangGraph |
 | **Vector Database** | Pinecone |
-| **LLM Providers** | Google Gemini, Groq (LLaMA) |
-| **Embeddings** | Sentence Transformers |
+| **LLM Providers** | Google Gemini 2.0 Flash, Groq (LLaMA 3.1 8B) |
+| **Embeddings** | Sentence Transformers (BAAI/bge-small-en-v1.5) |
 | **PDF Processing** | PyMuPDF, pypdf |
 
 ---
@@ -102,187 +87,213 @@ User Query
 
 ```
 backend/
-├── api/                    # FastAPI application layer
-│   ├── main.py             # App entry point & server config
-│   ├── config.py           # Environment & path configuration
-│   ├── routes/             # API route handlers
-│   │   ├── chat.py         # POST /chat endpoint
-│   │   ├── documents.py    # GET/DELETE /documents endpoints
-│   │   └── ingest.py       # POST /upload & /reingest endpoints
-│   ├── services/           # Business logic layer
-│   │   ├── chat_service.py # Multi-agent pipeline orchestration
-│   │   ├── ingestion_service.py  # PDF processing pipeline
-│   │   └── pinecone_service.py   # Vector DB operations
-│   └── models/             # Pydantic request/response schemas
+├── api/                      # FastAPI backend
+│   ├── main.py               # Server entry point & config
+│   ├── config.py             # Environment & path configuration
+│   ├── routes/               # API route handlers
+│   │   ├── chat.py           # POST /chat
+│   │   ├── documents.py      # GET/DELETE /documents
+│   │   └── ingest.py         # POST /upload & /reingest
+│   ├── services/             # Business logic
+│   │   ├── chat_service.py   # Multi-agent pipeline
+│   │   ├── ingestion_service.py  # PDF processing
+│   │   └── pinecone_service.py   # Vector DB ops
+│   └── models/               # Pydantic schemas
 │
-├── frontend/               # Streamlit frontend application
-│   ├── app.py              # Main entry point with page routing
-│   ├── pages/              # Streamlit page components
-│   │   ├── dashboard.py    # Document management dashboard
-│   │   ├── upload.py       # PDF upload page
-│   │   ├── chat.py         # AI chat interface
-│   │   └── analytics.py    # System analytics dashboard
-│   ├── components/         # Reusable UI components
-│   │   ├── sidebar.py      # Navigation sidebar
-│   │   ├── source_panel.py # Evidence source citation panel
-│   │   ├── upload_zone.py  # Drag-and-drop upload zone
-│   │   ├── document_table.py   # Document list table
-│   │   └── health_badge.py # Backend health status badge
-│   ├── services/           # Frontend API client layer
-│   │   └── api_client.py   # Centralized API client with retry logic
-│   ├── styles/             # CSS stylesheets
-│   │   └── main.css        # Glassmorphism dark theme styles
-│   └── utils/              # Frontend utilities
-│       ├── constants.py    # App constants and configuration
-│       ├── helpers.py      # Helper functions
-│       └── session.py      # Streamlit session state management
+├── frontend/                 # Streamlit frontend
+│   ├── app.py                # Entry point + page routing
+│   ├── views/                # Page components
+│   │   ├── dashboard.py      # Document management
+│   │   ├── upload.py         # PDF upload
+│   │   ├── chat.py           # AI chat interface
+│   │   └── analytics.py      # System analytics
+│   ├── components/           # Reusable UI
+│   │   ├── sidebar.py        # Navigation
+│   │   ├── source_panel.py   # Evidence citations
+│   │   ├── upload_zone.py    # Upload handler
+│   │   ├── document_table.py # Document list
+│   │   └── health_badge.py   # Backend status
+│   ├── services/             # API client
+│   │   └── api_client.py     # Centralized HTTP client
+│   ├── styles/
+│   │   └── main.css          # Dark glassmorphism theme
+│   └── utils/
+│       ├── constants.py      # App configuration
+│       ├── theme.py          # Design tokens
+│       ├── helpers.py        # Utility functions
+│       └── session.py        # State management
 │
-├── agents/                 # Specialist agent definitions
-│   ├── risk_agent.py       # Risk factor analysis
-│   ├── financial_agent.py  # Financial metrics extraction
-│   ├── company_agent.py    # Company overview & operations
-│   └── scoring_agent.py    # Source relevance scoring
+├── agents/                   # Specialist AI agents
+│   ├── risk_agent.py
+│   ├── financial_agent.py
+│   ├── company_agent.py
+│   ├── ipo_agent.py
+│   ├── legal_agent.py
+│   ├── regulatory_agent.py
+│   ├── red_flag_agent.py
+│   ├── scoring_agent.py
+│   └── synthesis_agent.py
 │
-├── graph/                  # LangGraph workflow definitions
-│   └── graph.py            # Agent orchestration state machine
+├── graph/                    # LangGraph orchestration
+│   ├── graph.py              # State machine
+│   ├── router.py             # Query router
+│   └── state.py              # Graph state
 │
-├── rag/                    # Retrieval-Augmented Generation
-│   └── retriever.py        # Section-aware semantic search
+├── rag/                      # Retrieval pipeline
+│   ├── ingest.py             # Pinecone ingestion
+│   └── retriever.py          # Section-aware search
 │
-├── preprocessing/          # Document processing pipeline
-│   ├── splitter.py         # Section & subsection splitting
-│   └── cleaner.py          # Noise removal & filtering
+├── preprocessing/
+│   └── splitter.py           # DRHP section splitter
 │
-├── data/                   # Runtime data storage
-│   ├── raw/                # Uploaded PDF files
-│   ├── metadata/           # Document metadata & section maps
-│   └── section_maps/       # Section-to-page mappings
+├── utils/                    # Shared utilities
+│   ├── embeddings.py
+│   ├── llms.py
+│   ├── file_utils.py
+│   └── section_map.py
 │
-├── app.py                  # CLI entry point (non-API mode)
-├── requirements.txt        # Python dependencies
-└── .env.example            # Environment variable template
+├── data/                     # Runtime data
+│   ├── raw/                  # Uploaded PDFs
+│   ├── metadata/             # Document metadata
+│   └── section_maps/         # Section mappings
+│
+├── app.py                    # CLI entry point
+├── requirements.txt
+├── .env.example
+└── README.md
 ```
 
 ---
 
 ## ⚙️ Setup Instructions
 
-### 1. Clone the Repository
+### Prerequisites
+
+- Python 3.10+
+- API keys for [Pinecone](https://www.pinecone.io/), [Google AI Studio](https://aistudio.google.com/), and [Groq](https://console.groq.com/)
+
+### 1. Clone & Navigate
+
 ```bash
 git clone https://github.com/your-username/drhp-analyst-ai.git
 cd drhp-analyst-ai/backend
 ```
 
 ### 2. Create Virtual Environment
+
 ```bash
 python -m venv venv
+
 # Windows
 venv\Scripts\activate
-# Linux/Mac
+
+# Linux / macOS
 source venv/bin/activate
 ```
 
 ### 3. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-Create a `.env` file in the `backend/` root:
-```env
-PINECONE_API_KEY=your_pinecone_api_key
-GEMINI_API_KEY=your_gemini_api_key
-GROQ_API_KEY=your_groq_api_key
+### 4. Configure Environment
+
+Copy `.env.example` to `.env` and fill in your API keys:
+
+```bash
+cp .env.example .env   # Linux/macOS
+copy .env.example .env # Windows
 ```
 
-> **Note:** Get your API keys from [Pinecone](https://www.pinecone.io/), [Google AI Studio](https://aistudio.google.com/), and [Groq](https://console.groq.com/).
+Required variables:
+```
+GROQ_API_KEY=gsk_your_key_here
+GEMINI_API_KEY=AIza_your_key_here
+PINECONE_API_KEY=pcsk_your_key_here
+PINECONE_INDEX=drhp-index
+PINECONE_CLOUD=aws
+PINECONE_REGION=us-east-1
+PORT=2706
+API_BASE_URL=http://localhost:2706
+```
 
-### 5. Run the Server
+### 5. Run the Backend
+
 ```bash
+# Activate venv first, then:
 python -m api.main
 ```
 
 The API will be available at:
 - **Base URL:** `http://localhost:2706`
 - **Swagger Docs:** `http://localhost:2706/docs`
-- **ReDoc:** `http://localhost:2706/redoc`
 
----
+### 6. Run the Frontend (new terminal)
 
-## 🖥️ Streamlit Frontend
-
-### Run the Frontend
 ```bash
+# Make sure venv is activated
 streamlit run frontend/app.py
 ```
 
 The frontend will be available at **`http://localhost:8501`**.
 
-Make sure the backend is running first (on port 2706), then launch the frontend in a separate terminal.
-
-### Frontend Pages
-
-| Page | Description |
-|------|-------------|
-| **Home** | Landing page with hero section, metrics, and feature overview |
-| **Dashboard** | Document management — list, search, reingest, and delete DRHPs |
-| **Upload** | Drag-and-drop PDF upload with ingestion pipeline |
-| **Chat** | ChatGPT-style interface with multi-agent AI document Q&A |
-| **Analytics** | System metrics, document stats, and query performance charts |
-
 ---
 
 ## 📥 Upload & Ingest DRHP
 
-### How to Upload
+### Via Frontend UI
+1. Open `http://localhost:8501`
+2. Navigate to **Upload**
+3. Drag & drop or select a PDF file (max 100 MB)
+4. Wait for ingestion to complete
+
+### Via API
+
 ```bash
-curl -X POST http://localhost:8000/upload \
+curl -X POST http://localhost:2706/upload \
   -F "file=@your_drhp_document.pdf"
 ```
 
-Or use the Swagger UI at `http://localhost:8000/docs`.
-
 ### What Happens Internally
 
-1. **PDF Parsing** — Extracts text and preserves page numbers using PyMuPDF
-2. **Section Splitting** — Identifies DRHP-specific sections (Risk Factors, Financials, Object of Issue, etc.)
-3. **Noise Filtering** — Removes legal boilerplate and standard subsections that dilute retrieval quality
-4. **Embedding Generation** — Converts each section chunk into vector embeddings using sentence transformers
-5. **Namespace Creation** — Creates a Pinecone namespace named after the document for query isolation
-6. **Index Upsert** — Stores vectors with metadata (page, section, subsection, file hash)
+1. **PDF Parsing** — Text extraction with page numbers via PyMuPDF
+2. **Section Splitting** — Detects DRHP sections (Risk Factors, Financials, etc.)
+3. **Noise Filtering** — Removes legal boilerplate
+4. **Embedding** — Converts chunks to vectors via Sentence Transformers
+5. **Indexing** — Stores in Pinecone with document-specific namespace
 
 ---
 
-## 💬 API Usage
+## 💬 Chat Usage
 
-### POST `/chat`
-Ask a question about an ingested DRHP document.
+### Via Frontend UI
+1. Open `http://localhost:8501`
+2. Navigate to **Chat**
+3. Select a document from the sidebar
+4. Type your question or click a suggested prompt
+
+### Via API
 
 **Request:**
-```json
-{
-  "query": "What are the main risk factors for this company?",
-  "doc_name": "lenskart_drhp"
-}
+```bash
+curl -X POST http://localhost:2706/chat \
+  -H "Content-Type: application/json" \
+  -d '{"query": "What are the main risk factors?", "doc_name": "lenskart_drhp"}'
 ```
 
 **Response:**
 ```json
 {
-  "answer": "The company identifies several key risk factors: (1) Intense competition in the eyewear market from both organized and unorganized players... (2) Heavy reliance on retail store expansion as primary growth driver... (3) Regulatory risks related to optical goods pricing...",
+  "answer": "The company identifies several key risk factors...",
   "sources": [
     {
       "page": 45,
       "section": "Risk Factors",
-      "snippet": "The company faces competition from both organized retail chains and local optical stores..."
-    },
-    {
-      "page": 47,
-      "section": "Risk Factors",
-      "snippet": "Our growth strategy is substantially dependent on the success of our retail expansion plans..."
+      "snippet": "The company faces competition..."
     }
   ],
-  "agents_used": ["risk_agent", "scoring_agent", "synthesis_agent"],
+  "agents_used": ["risk_agent", "synthesis_agent"],
   "query_type": "risk",
   "execution_time_ms": 3542.18
 }
@@ -290,113 +301,61 @@ Ask a question about an ingested DRHP document.
 
 ---
 
-### GET `/documents`
-List all ingested documents.
+## 📡 API Reference
 
-**Response:**
-```json
-{
-  "documents": [
-    {
-      "doc_name": "lenskart_drhp",
-      "uploaded_at": "2025-05-01T12:00:00Z",
-      "status": "ready",
-      "section_count": 12,
-      "file_hash": "a1b2c3d4e5f6..."
-    },
-    {
-      "doc_name": "zepto_drhp",
-      "uploaded_at": "2025-05-03T14:30:00Z",
-      "status": "ready",
-      "section_count": 15,
-      "file_hash": "f6e5d4c3b2a1..."
-    }
-  ]
-}
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Root health check |
+| `GET` | `/health` | Service health status |
+| `POST` | `/upload` | Upload & ingest PDF |
+| `POST` | `/reingest/{doc_name}` | Re-ingest existing document |
+| `GET` | `/documents` | List all documents |
+| `DELETE` | `/documents/{doc_name}` | Delete document & namespace |
+| `POST` | `/chat` | Ask a question about a document |
 
----
-
-### POST `/upload`
-Upload and ingest a new DRHP PDF.
-
-**Request:** `multipart/form-data` with field `file` (PDF, max 100MB)
-
-**Response:**
-```json
-{
-  "doc_name": "zepto_drhp",
-  "status": "ingested",
-  "section_count": 15,
-  "message": "Document 'zepto_drhp' ingested successfully with 15 sections"
-}
-```
-
----
-
-### DELETE `/documents/{doc_name}`
-Delete a document and its Pinecone namespace.
-
-**Response:**
-```json
-{
-  "status": "deleted",
-  "doc_name": "zepto_drhp"
-}
-```
+Full interactive docs at `http://localhost:2706/docs`.
 
 ---
 
 ## 🧪 Example Queries
 
-| Query | Agent Used | Expected Output |
-|-------|------------|-----------------|
-| _"What does the company do?"_ | `company_agent` | Business model, product lines, target market |
-| _"What are the key risks?"_ | `risk_agent` | Enumerated risk factors with page citations |
-| _"How profitable is the company?"_ | `financial_agent` | Revenue trends, margins, loss/profit status |
-| _"What will the IPO funds be used for?"_ | `object_agent` | Object of issue breakdown with percentages |
-| _"Should I invest in this company?"_ | Multiple agents | Balanced view with pros, cons, and grounded caveats |
+| Query | Agent | Output |
+|-------|-------|--------|
+| "What does the company do?" | `company_agent` | Business model, products, market |
+| "What are the key risks?" | `risk_agent` | Risk factors with page citations |
+| "How profitable is it?" | `financial_agent` | Revenue, margins, P&L summary |
+| "IPO price band details?" | `ipo_agent` | Price band, lot size, dates |
+| "Any outstanding litigation?" | `legal_agent` | Legal proceedings summary |
+| "Should I invest?" | Multiple agents | Scoring with pros/cons |
 
 ---
 
-## 🧠 How It Avoids Hallucination
+## 🧠 Hallucination Prevention
 
-### 1. Namespace Locking
-Every document gets an isolated Pinecone namespace. Queries **only** retrieve from the specified document's vectors — no cross-contamination between DRHPs.
-
-### 2. Strict System Prompts
-Agents are prompted with explicit instructions:
-> _"Answer only using the provided context. If the context does not contain sufficient information, state that clearly. Do not invent or assume facts."_
-
-### 3. Subsection Filtering
-Standard legal boilerplate (e.g., generic "objects clause" language) is filtered out during ingestion so retrieval doesn't surface irrelevant noise.
-
-### 4. Evidence Requirement
-The `scoring_agent` evaluates each retrieved chunk for relevance before synthesis. Sources with low relevance scores are discarded. Every claim in the final answer must be backed by a cited page and section.
+1. **Namespace Isolation** — Each document's vectors are separate
+2. **Strict Prompts** — Agents must answer only from provided context
+3. **Subsection Filtering** — Legal boilerplate removed before retrieval
+4. **Evidence Requirement** — Every claim must cite a page and section
 
 ---
 
 ## 🚀 Future Improvements
 
-- [ ] **DRHP Comparison Engine** — Side-by-side analysis of multiple IPO filings
-- [ ] **Financial Ratio Extraction** — Automated computation of P/E, debt-to-equity, ROE, etc.
-- [ ] **PDF Highlighting** — Return highlighted PDF pages alongside answers
-- [x] **Frontend UI** — Interactive Streamlit chat interface with document management dashboard
-- [ ] **Batch Processing** — Upload and ingest multiple DRHPs simultaneously
-- [ ] **Caching Layer** — Redis cache for frequently asked questions
+- [ ] DRHP Comparison Engine — Side-by-side IPO analysis
+- [ ] Financial Ratio Extraction — P/E, debt-to-equity, ROE
+- [ ] PDF Highlighting — Annotated PDF pages with answers
+- [x] Frontend UI — Streamlit dashboard + chat interface
+- [ ] Batch Processing — Multi-PDF upload
+- [ ] Caching Layer — Redis for frequent queries
 
 ---
 
-## 📌 Author / Credits
+## 📌 Author
 
 Built by **[Rushi Shah](https://github.com/RushishahOG)**
-
-> This project was developed as part of a portfolio showcase for AI/ML engineering roles. Contributions and feedback are welcome!
 
 ---
 
 <div align="center">
-
-**⭐ If you find this project useful, consider giving it a star!**
-
+  <strong>⭐ If you find this project useful, consider giving it a star!</strong>
 </div>
