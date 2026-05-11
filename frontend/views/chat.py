@@ -4,6 +4,38 @@ from frontend.components.source_panel import render_source_panel
 from frontend.utils.constants import SUGGESTED_PROMPTS, QUERY_TYPE_LABELS
 
 
+def process_prompt(query: str):
+    if not query or not st.session_state.selected_doc:
+        return
+    st.session_state.chat_history.append({"role": "user", "content": query})
+    with st.spinner("🤖 Analyzing document..."):
+        try:
+            result = chat_with_document(query, st.session_state.selected_doc)
+            answer = result.get("answer", "No answer generated.")
+            sources = result.get("sources", [])
+            agents = result.get("agents_used", [])
+            qtype = result.get("query_type", "general")
+            exec_time = result.get("execution_time_ms", 0)
+            agent_labels = [QUERY_TYPE_LABELS.get(a, a) for a in agents]
+            meta = f"⏱ {exec_time:.0f}ms  ·  🎯 {QUERY_TYPE_LABELS.get(qtype, qtype)}"
+            if agent_labels:
+                meta += f"  ·  🤖 {', '.join(agent_labels)}"
+            full_response = f"{answer}\n\n---\n*{meta}*"
+            st.session_state.chat_history.append({
+                "role": "assistant", "content": full_response, "sources": sources,
+            })
+            st.session_state.query_analytics.append({
+                "query": query, "doc_name": st.session_state.selected_doc,
+                "query_type": qtype, "execution_time_ms": exec_time,
+                "sources_count": len(sources),
+            })
+        except APIClientError as e:
+            st.session_state.chat_history.append({
+                "role": "assistant", "content": f"❌ **Error:** {e}", "sources": [],
+            })
+    st.rerun()
+
+
 def render_chat():
     st.markdown(
         """
@@ -14,6 +46,11 @@ def render_chat():
         """,
         unsafe_allow_html=True,
     )
+
+    pending = st.session_state.pop("_pending_prompt", None)
+    if pending and st.session_state.selected_doc:
+        process_prompt(pending)
+        return
 
     col_chat, col_sidebar = st.columns([3, 1])
 
@@ -54,51 +91,8 @@ def render_chat():
             )
 
         query = st.chat_input("Ask a question about the DRHP...", key="chat_query")
-
         if query and st.session_state.selected_doc:
-            st.session_state.chat_history.append({"role": "user", "content": query})
-
-            with st.spinner("🤖 Analyzing document..."):
-                try:
-                    result = chat_with_document(query, st.session_state.selected_doc)
-
-                    answer = result.get("answer", "No answer generated.")
-                    sources = result.get("sources", [])
-                    agents = result.get("agents_used", [])
-                    qtype = result.get("query_type", "general")
-                    exec_time = result.get("execution_time_ms", 0)
-
-                    agent_labels = [QUERY_TYPE_LABELS.get(a, a) for a in agents]
-                    meta = (
-                        f"⏱ {exec_time:.0f}ms  ·  🎯 {QUERY_TYPE_LABELS.get(qtype, qtype)}"
-                    )
-                    if agent_labels:
-                        meta += f"  ·  🤖 {', '.join(agent_labels)}"
-
-                    full_response = f"{answer}\n\n---\n*{meta}*"
-
-                    st.session_state.chat_history.append({
-                        "role": "assistant",
-                        "content": full_response,
-                        "sources": sources,
-                    })
-
-                    st.session_state.query_analytics.append({
-                        "query": query,
-                        "doc_name": st.session_state.selected_doc,
-                        "query_type": qtype,
-                        "execution_time_ms": exec_time,
-                        "sources_count": len(sources),
-                    })
-
-                except APIClientError as e:
-                    st.session_state.chat_history.append({
-                        "role": "assistant",
-                        "content": f"❌ **Error:** {e}",
-                        "sources": [],
-                    })
-
-            st.rerun()
+            process_prompt(query)
 
     with col_sidebar:
         st.markdown(
@@ -145,5 +139,5 @@ def render_chat():
         for prompt in SUGGESTED_PROMPTS:
             key = f"sp_{hash(prompt)}"
             if st.button(prompt, key=key, use_container_width=True):
-                st.session_state.chat_input = prompt
+                st.session_state._pending_prompt = prompt
                 st.rerun()
