@@ -115,6 +115,28 @@ backend/
 │   │   └── pinecone_service.py   # Vector DB operations
 │   └── models/             # Pydantic request/response schemas
 │
+├── frontend/               # Streamlit frontend application
+│   ├── app.py              # Main entry point with page routing
+│   ├── pages/              # Streamlit page components
+│   │   ├── dashboard.py    # Document management dashboard
+│   │   ├── upload.py       # PDF upload page
+│   │   ├── chat.py         # AI chat interface
+│   │   └── analytics.py    # System analytics dashboard
+│   ├── components/         # Reusable UI components
+│   │   ├── sidebar.py      # Navigation sidebar
+│   │   ├── source_panel.py # Evidence source citation panel
+│   │   ├── upload_zone.py  # Drag-and-drop upload zone
+│   │   ├── document_table.py   # Document list table
+│   │   └── health_badge.py # Backend health status badge
+│   ├── services/           # Frontend API client layer
+│   │   └── api_client.py   # Centralized API client with retry logic
+│   ├── styles/             # CSS stylesheets
+│   │   └── main.css        # Glassmorphism dark theme styles
+│   └── utils/              # Frontend utilities
+│       ├── constants.py    # App constants and configuration
+│       ├── helpers.py      # Helper functions
+│       └── session.py      # Streamlit session state management
+│
 ├── agents/                 # Specialist agent definitions
 │   ├── risk_agent.py       # Risk factor analysis
 │   ├── financial_agent.py  # Financial metrics extraction
@@ -181,9 +203,32 @@ python -m api.main
 ```
 
 The API will be available at:
-- **Base URL:** `http://localhost:8000`
-- **Swagger Docs:** `http://localhost:8000/docs`
-- **ReDoc:** `http://localhost:8000/redoc`
+- **Base URL:** `http://localhost:2706`
+- **Swagger Docs:** `http://localhost:2706/docs`
+- **ReDoc:** `http://localhost:2706/redoc`
+
+---
+
+## 🖥️ Streamlit Frontend
+
+### Run the Frontend
+```bash
+streamlit run frontend/app.py
+```
+
+The frontend will be available at **`http://localhost:8501`**.
+
+Make sure the backend is running first (on port 2706), then launch the frontend in a separate terminal.
+
+### Frontend Pages
+
+| Page | Description |
+|------|-------------|
+| **Home** | Landing page with hero section, metrics, and feature overview |
+| **Dashboard** | Document management — list, search, reingest, and delete DRHPs |
+| **Upload** | Drag-and-drop PDF upload with ingestion pipeline |
+| **Chat** | ChatGPT-style interface with multi-agent AI document Q&A |
+| **Analytics** | System metrics, document stats, and query performance charts |
 
 ---
 
@@ -336,7 +381,7 @@ The `scoring_agent` evaluates each retrieved chunk for relevance before synthesi
 - [ ] **DRHP Comparison Engine** — Side-by-side analysis of multiple IPO filings
 - [ ] **Financial Ratio Extraction** — Automated computation of P/E, debt-to-equity, ROE, etc.
 - [ ] **PDF Highlighting** — Return highlighted PDF pages alongside answers
-- [ ] **Frontend UI** — Interactive chat interface with document management dashboard
+- [x] **Frontend UI** — Interactive Streamlit chat interface with document management dashboard
 - [ ] **Batch Processing** — Upload and ingest multiple DRHPs simultaneously
 - [ ] **Caching Layer** — Redis cache for frequently asked questions
 
