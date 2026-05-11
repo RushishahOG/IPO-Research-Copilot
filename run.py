@@ -6,11 +6,15 @@ ON_RENDER = os.environ.get("RENDER", "").lower() == "true"
 
 # --- Ports ---
 # On Render, PORT is the public-facing port — Streamlit uses it.
-# Backend runs on an internal port and is not publicly exposed.
+# Backend runs on an internal port and must not collide with Render's PORT.
+HOST = "0.0.0.0"
 RENDER_PUBLIC_PORT = int(os.environ.get("PORT", 8501))
 BACKEND_PORT = int(os.environ.get("BACKEND_PORT", 2706))
 LOCAL_FRONTEND_PORT = int(os.environ.get("LOCAL_FRONTEND_PORT", 8501))
-HOST = "0.0.0.0"
+
+# If on Render and the backend port happens to match Render's PORT, bump it
+if ON_RENDER and BACKEND_PORT == RENDER_PUBLIC_PORT:
+    BACKEND_PORT = RENDER_PUBLIC_PORT + 1
 
 
 def _start_backend():
